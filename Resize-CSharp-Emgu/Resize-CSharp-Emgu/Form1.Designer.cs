@@ -31,11 +31,16 @@
             this.panelImg = new System.Windows.Forms.Panel();
             this.panelBtn = new System.Windows.Forms.Panel();
             this.buttonLoad = new System.Windows.Forms.Button();
+            this.pictureBoxSrc = new System.Windows.Forms.PictureBox();
+            this.panelImg.SuspendLayout();
             this.panelBtn.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxSrc)).BeginInit();
             this.SuspendLayout();
             // 
             // panelImg
             // 
+            this.panelImg.BackColor = System.Drawing.Color.AliceBlue;
+            this.panelImg.Controls.Add(this.pictureBoxSrc);
             this.panelImg.Location = new System.Drawing.Point(20, 20);
             this.panelImg.Name = "panelImg";
             this.panelImg.Size = new System.Drawing.Size(500, 500);
@@ -43,33 +48,47 @@
             // 
             // panelBtn
             // 
+            this.panelBtn.BackColor = System.Drawing.Color.LightSteelBlue;
+            this.panelBtn.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.panelBtn.Controls.Add(this.buttonLoad);
             this.panelBtn.Location = new System.Drawing.Point(558, 20);
             this.panelBtn.Name = "panelBtn";
-            this.panelBtn.Size = new System.Drawing.Size(100, 500);
+            this.panelBtn.Size = new System.Drawing.Size(204, 500);
             this.panelBtn.TabIndex = 1;
             // 
             // buttonLoad
             // 
-            this.buttonLoad.Location = new System.Drawing.Point(0, 77);
+            this.buttonLoad.Location = new System.Drawing.Point(0, 0);
             this.buttonLoad.Name = "buttonLoad";
-            this.buttonLoad.Size = new System.Drawing.Size(100, 30);
+            this.buttonLoad.Size = new System.Drawing.Size(200, 50);
             this.buttonLoad.TabIndex = 0;
             this.buttonLoad.Text = "Load";
             this.buttonLoad.UseVisualStyleBackColor = true;
             this.buttonLoad.Click += new System.EventHandler(this.buttonLoad_Click);
             // 
+            // pictureBoxSrc
+            // 
+            this.pictureBoxSrc.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.pictureBoxSrc.Location = new System.Drawing.Point(0, 0);
+            this.pictureBoxSrc.Name = "pictureBoxSrc";
+            this.pictureBoxSrc.Size = new System.Drawing.Size(500, 500);
+            this.pictureBoxSrc.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.pictureBoxSrc.TabIndex = 0;
+            this.pictureBoxSrc.TabStop = false;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(682, 553);
+            this.ClientSize = new System.Drawing.Size(782, 553);
             this.Controls.Add(this.panelBtn);
             this.Controls.Add(this.panelImg);
             this.Name = "Form1";
             this.Text = "Form1";
             this.Load += new System.EventHandler(this.Form1_Load);
+            this.panelImg.ResumeLayout(false);
             this.panelBtn.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxSrc)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -79,6 +98,7 @@
         private System.Windows.Forms.Panel panelImg;
         private System.Windows.Forms.Panel panelBtn;
         private System.Windows.Forms.Button buttonLoad;
+        private System.Windows.Forms.PictureBox pictureBoxSrc;
     }
 }
 
