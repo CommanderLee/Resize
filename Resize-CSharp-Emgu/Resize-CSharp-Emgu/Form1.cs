@@ -203,7 +203,105 @@ namespace Resize_CSharp_Emgu
 
         private void carveHorizontalSeam()
         {
+            int currID = id % 2;
+            // Calculate energy matrix with DP
+            for (int j = 0; j < currWidth; ++j)
+            {
+                for (int i = 0; i < currHeight; ++i)
+                {
+                    if (j > 0)
+                    {
+                        horSeamMat[i, j, currID] = energy[i, j, currID] + horSeamMat[i, j - 1, currID];
+                        if (i > 0)
+                        {
+                            horSeamMat[i, j, currID] = Math.Min(energy[i, j, currID] + horSeamMat[i - 1, j - 1, currID],
+                                horSeamMat[i, j, currID]);
+                        }
+                        if (i < currHeight - 1)
+                        {
+                            horSeamMat[i, j, currID] = Math.Min(energy[i, j, currID] + horSeamMat[i + 1, j - 1, currID],
+                                horSeamMat[i, j, currID]);
+                        }
+                    }
+                    else
+                    {
+                        horSeamMat[i, j, currID] = energy[i, j, currID];
+                    }
+                }
+            }
 
+            ++id;
+            int newID = id % 2;
+
+            // Get the row No. of the seam on the last column
+            int row = 0, minMatrix = horSeamMat[0, currWidth - 1, currID];
+            for (int i = 1; i < currHeight; ++i)
+            {
+                if (horSeamMat[i, currWidth - 1, currID] < minMatrix)
+                {
+                    // update min
+                    row = i;
+                    minMatrix = horSeamMat[i, currWidth - 1, currID];
+                }
+            }
+            horSeam[currWidth - 1] = row;
+
+            // Get row No. on the other columns and get new image and energy
+            for (int j = currWidth - 1; j >= 0; --j)
+            {
+                // Copy [0..row - 1]
+                for (int i = 0; i < row; ++i)
+                {
+                    myImg[newID][i, j] = myImg[currID][i, j];
+                    myImgGray[newID][i, j] = myImgGray[currID][i, j];
+                    energy[i, j, newID] = energy[i, j, currID];
+                }
+
+                myImg[currID][row, j] = new Bgr(Color.Red);
+
+                // Move [row + 1..old height - 1] to left
+                for (int i = row; i < currHeight - 1; ++i)
+                {
+                    myImg[newID][i, j] = myImg[currID][i + 1, j];
+                    myImgGray[newID][i, j] = myImgGray[currID][i + 1, j];
+                    energy[i, j, newID] = energy[i + 1, j, currID];
+                }
+
+                // Get next row No.
+                if (j > 0)
+                {
+                    int newRow = row;
+                    minMatrix = horSeamMat[newRow, j - 1, currID];
+                    if (row > 0 && horSeamMat[row - 1, j - 1, currID] < minMatrix)
+                    {
+                        newRow = row - 1;
+                        minMatrix = horSeamMat[row - 1, j - 1, currID];
+                    }
+                    if (row < currHeight - 1 && horSeamMat[row + 1, j - 1, currID] < minMatrix)
+                    {
+                        newRow = row + 1;
+                    }
+                    horSeam[j - 1] = newRow;
+                    row = newRow;
+                }
+            }
+
+            // Calculate other energy at point near the seam
+            // The energy of most points does not change
+            for (int j = 0; j < currWidth; ++j)
+            {
+                for (int i = horSeam[j] - 1; i <= horSeam[j]; ++i)
+                {
+                    // Valid point in the new image
+                    if (i >= 0 && i < currHeight - 1)
+                    {
+                        energy[i, j, newID] = getEnergy(i, j);
+                    }
+                }
+            }
+
+            // show the temp img
+            // pictureBoxTar.Image = myImg[currID].ToBitmap();
         }
 
         private void resize()
@@ -219,6 +317,17 @@ namespace Resize_CSharp_Emgu
                     --currWidth;
 
                     Debug.WriteLine(String.Format("Seam No.{0} - Vertical - Done.", id));
+                }
+            }
+
+            if (currHeight > tarHeight)
+            {
+                while (currHeight > tarHeight)
+                {
+                    carveHorizontalSeam();
+                    --currHeight;
+
+                    Debug.WriteLine(String.Format("Seam No.{0} - Horizontal - Done.", id));
                 }
             }
 
