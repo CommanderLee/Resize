@@ -21,6 +21,11 @@ namespace Resize_CSharp_Emgu
         private int                 width;
         private int                 height;
 
+        // Energy value, vertical/horizontal seam matrix
+        private int[,]              energy;
+        private int[,]              verSeamMat;
+        private int[,]              horSeamMat;
+
         public Form1()
         {
             InitializeComponent();
@@ -34,28 +39,28 @@ namespace Resize_CSharp_Emgu
         /**
          * Calculate the energy of point (x, y)
          */
-        private int energy(int x, int y)
+        private int getEnergy(int x, int y)
         {
             int ret = 0;
             try
             {
                 // Simple version
-                if (x > 0)
-                {
-                    ret += Math.Abs(srcImg.Data[y, x, 0] - srcImg.Data[y, x - 1, 0]);
-                }
-                else
-                {
-                    ret += Math.Abs(srcImg.Data[y, x, 0]);
-                }
-
                 if (y > 0)
                 {
-                    ret += Math.Abs(srcImg.Data[y, x, 0] - srcImg.Data[y - 1, x, 0]);
+                    ret += Math.Abs(srcImg.Data[x, y, 0] - srcImg.Data[x, y - 1, 0]);
                 }
                 else
                 {
-                    ret += Math.Abs(srcImg.Data[y, x, 0]);
+                    ret += Math.Abs(srcImg.Data[x, y, 0]);
+                }
+
+                if (x > 0)
+                {
+                    ret += Math.Abs(srcImg.Data[x, y, 0] - srcImg.Data[x - 1, y, 0]);
+                }
+                else
+                {
+                    ret += Math.Abs(srcImg.Data[x, y, 0]);
                 }
             }
             catch (Exception e)
@@ -76,15 +81,31 @@ namespace Resize_CSharp_Emgu
                 width = srcImg.Width;
                 height = srcImg.Height;
 
-                // Display the image. I(x, y, {B,G,R}): img.Data[y, x, {0,1,2}]
+                // Display the image. 
+                // I(x, y, {B,G,R}): img.Data[x, y, {0,1,2}]. x: row No. y: col No.
                 pictureBoxSrc.Image = srcImg.ToBitmap();
 
                 // Output debug info
-                Debug.WriteLine(String.Format("Name:{0}, X:{1}, Y{2}", openFile.FileName, width, height));
-                Debug.WriteLine(String.Format("I(499,0): B:{0}, G:{1}, R:{2}",
+                Debug.WriteLine(String.Format("Name:{0}, Width:{1}, Height{2}", openFile.FileName, width, height));
+                Debug.WriteLine(String.Format("I(0, 499): B:{0}, G:{1}, R:{2}",
                     srcImg.Data[0, 499, 0], srcImg.Data[0, 499, 1], srcImg.Data[0, 499, 2]));
-                Debug.WriteLine(energy(0, 0));
+                Debug.WriteLine(getEnergy(0, 0));
             }
+        }
+
+        private void buttonResize_Click(object sender, EventArgs e)
+        {
+            // Get energy value
+            energy = new int[height, width];
+            for (int i = 0; i < height; ++i)
+            {
+                for (int j = 0; j < width; ++j)
+                {
+                    energy[i, j] = getEnergy(i, j);
+                    // Debug.WriteLine(String.Format("{0},{1}: {2}", i, j, energy[i, j]));
+                }
+            }
+            Debug.WriteLine("Energy value done.");
         }
     }
 }
