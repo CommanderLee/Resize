@@ -84,14 +84,14 @@
             this.textBoxHeight.Location = new System.Drawing.Point(70, 55);
             this.textBoxHeight.Name = "textBoxHeight";
             this.textBoxHeight.Size = new System.Drawing.Size(120, 22);
-            this.textBoxHeight.TabIndex = 5;
+            this.textBoxHeight.TabIndex = 1;
             // 
             // textBoxWidth
             // 
             this.textBoxWidth.Location = new System.Drawing.Point(70, 90);
             this.textBoxWidth.Name = "textBoxWidth";
             this.textBoxWidth.Size = new System.Drawing.Size(120, 22);
-            this.textBoxWidth.TabIndex = 4;
+            this.textBoxWidth.TabIndex = 2;
             // 
             // labelHeight
             // 
@@ -119,7 +119,7 @@
             this.buttonResize.Location = new System.Drawing.Point(0, 200);
             this.buttonResize.Name = "buttonResize";
             this.buttonResize.Size = new System.Drawing.Size(200, 50);
-            this.buttonResize.TabIndex = 1;
+            this.buttonResize.TabIndex = 3;
             this.buttonResize.Text = "Resize";
             this.buttonResize.UseVisualStyleBackColor = true;
             this.buttonResize.Click += new System.EventHandler(this.buttonResize_Click);

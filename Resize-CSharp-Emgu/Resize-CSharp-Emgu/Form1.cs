@@ -53,10 +53,27 @@ namespace Resize_CSharp_Emgu
         private int getEnergy(int x, int y)
         {
             int ret = 0;
+            int currID = id % 2;
             try
             {
-                int currID = id % 2;
                 // Simple version
+                if (x > 0)
+                {
+                    ret += Math.Abs(myImgGray[currID].Data[x, y, 0] - myImgGray[currID].Data[x - 1, y, 0]);
+                }
+                else
+                {
+                    ret += Math.Abs(myImgGray[currID].Data[x, y, 0]);
+                }
+                if (x < currHeight - 1)
+                {
+                    ret += Math.Abs(myImgGray[currID].Data[x + 1, y, 0] - myImgGray[currID].Data[x, y, 0]);
+                }
+                else
+                {
+                    ret += Math.Abs(myImgGray[currID].Data[x, y, 0]);
+                }
+
                 if (y > 0)
                 {
                     ret += Math.Abs(myImgGray[currID].Data[x, y, 0] - myImgGray[currID].Data[x, y - 1, 0]);
@@ -65,10 +82,9 @@ namespace Resize_CSharp_Emgu
                 {
                     ret += Math.Abs(myImgGray[currID].Data[x, y, 0]);
                 }
-
-                if (x > 0)
+                if (y < currWidth - 1)
                 {
-                    ret += Math.Abs(myImgGray[currID].Data[x, y, 0] - myImgGray[currID].Data[x - 1, y, 0]);
+                    ret += Math.Abs(myImgGray[currID].Data[x, y + 1, 0] - myImgGray[currID].Data[x, y, 0]);
                 }
                 else
                 {
@@ -110,7 +126,6 @@ namespace Resize_CSharp_Emgu
                     }
                 }
             }
-            Debug.WriteLine(String.Format("Seam No.{0} - Vertical - Matrix done.", id));
 
             ++id;
             int newID = id % 2;
@@ -139,6 +154,8 @@ namespace Resize_CSharp_Emgu
                     energy[i, j, newID] = energy[i, j, currID];
                 }
 
+                myImg[currID][i, col] = new Bgr(Color.Red);
+
                 // Move [col + 1..old width - 1] to left
                 for (int j = col; j < currWidth - 1; ++j)
                 {
@@ -162,6 +179,7 @@ namespace Resize_CSharp_Emgu
                         newCol = col + 1;
                     }
                     verSeam[i - 1] = newCol;
+                    col = newCol;
                 }
             }
 
@@ -178,10 +196,14 @@ namespace Resize_CSharp_Emgu
                     }
                 }
             }
+
+            // show the temp img
+            // pictureBoxTar.Image = myImg[currID].ToBitmap();
         }
 
         private void carveHorizontalSeam()
         {
+
         }
 
         private void resize()
@@ -195,6 +217,8 @@ namespace Resize_CSharp_Emgu
                 {
                     carveVerticalSeam();
                     --currWidth;
+
+                    Debug.WriteLine(String.Format("Seam No.{0} - Vertical - Done.", id));
                 }
             }
 
@@ -213,8 +237,8 @@ namespace Resize_CSharp_Emgu
             {
                 // Load the image
                 srcImg = new Image<Bgr, Byte>(openFile.FileName);
-                myImg[0] = new Image<Bgr, Byte>(openFile.FileName);
-                myImg[1] = new Image<Bgr, Byte>(openFile.FileName);
+                myImg[0] = srcImg.Copy();
+                myImg[1] = srcImg.Copy();
                 myImgGray[0] = myImg[0].Convert<Gray, byte>();
                 myImgGray[1] = myImg[1].Convert<Gray, byte>();
                 srcWidth = myImg[0].Width;
@@ -223,6 +247,8 @@ namespace Resize_CSharp_Emgu
                 // Display the image. 
                 // I(x, y, {B,G,R}): img.Data[x, y, {0,1,2}]. x: row No. y: col No.
                 pictureBoxSrc.Image = myImg[0].ToBitmap();
+                textBoxHeight.Text = Convert.ToString(srcHeight);
+                textBoxWidth.Text = Convert.ToString(srcWidth);
 
                 // Output debug info
                 Debug.WriteLine(String.Format("Name:{0}, Height:{1}, Width:{2}", openFile.FileName, srcHeight, srcWidth));
@@ -233,17 +259,17 @@ namespace Resize_CSharp_Emgu
 
         private void buttonResize_Click(object sender, EventArgs e)
         {
+            // Initialize
             id = 0;
-            myImg[0] = srcImg;
+            int currID = id % 2;
+            myImg[0] = srcImg.Copy();
             myImgGray[0] = srcImg.Convert<Gray, Byte>();
+            currHeight = srcHeight;
+            currWidth = srcWidth;
+
             tarWidth = Convert.ToInt32(textBoxWidth.Text);
             tarHeight = Convert.ToInt32(textBoxHeight.Text);
             Debug.WriteLine(String.Format("Begin: {0}x{1} -> {2}x{3}", srcHeight, srcWidth, tarHeight, tarWidth));
-
-            int currID = id % 2;
-
-            // Get Gray image
-            // myImgGray[currID] = myImg[currID].Convert<Gray, byte>();
 
             // Get energy value
             energy = new int[srcHeight, srcWidth, 2];
@@ -256,10 +282,19 @@ namespace Resize_CSharp_Emgu
                 for (int j = 0; j < srcWidth; ++j)
                 {
                     energy[i, j, currID] = getEnergy(i, j);
-                    // Debug.WriteLine(String.Format("{0},{1}: {2}", i, j, energy[i, j]));
                 }
             }
             Debug.WriteLine("Energy value done.");
+
+            //Image<Gray, Byte> energyImg = new Image<Gray, Byte>(srcWidth, srcHeight);
+            //for (int i = 0; i < srcHeight; ++i)
+            //{
+            //    for (int j = 0; j < srcWidth; ++j)
+            //    {
+            //        energyImg[i, j] = new Gray(energy[i, j, currID] / 4);
+            //    }
+            //}
+            //pictureBoxTar.Image = energyImg.ToBitmap();
 
             resize();
         }
