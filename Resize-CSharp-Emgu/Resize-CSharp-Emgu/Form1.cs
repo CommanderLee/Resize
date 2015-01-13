@@ -16,6 +16,11 @@ namespace Resize_CSharp_Emgu
 {
     public partial class Form1 : Form
     {
+        private Image<Bgr, Byte>    srcImg = null;
+        private Image<Gray, Byte>   srcImgGray = null;
+        private int                 width;
+        private int                 height;
+
         public Form1()
         {
             InitializeComponent();
@@ -26,19 +31,59 @@ namespace Resize_CSharp_Emgu
 
         }
 
+        /**
+         * Calculate the energy of point (x, y)
+         */
+        private int energy(int x, int y)
+        {
+            int ret = 0;
+            try
+            {
+                // Simple version
+                if (x > 0)
+                {
+                    ret += Math.Abs(srcImg.Data[y, x, 0] - srcImg.Data[y, x - 1, 0]);
+                }
+                else
+                {
+                    ret += Math.Abs(srcImg.Data[y, x, 0]);
+                }
+
+                if (y > 0)
+                {
+                    ret += Math.Abs(srcImg.Data[y, x, 0] - srcImg.Data[y - 1, x, 0]);
+                }
+                else
+                {
+                    ret += Math.Abs(srcImg.Data[y, x, 0]);
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e.StackTrace);
+            }
+            return ret;
+        }
+
         private void buttonLoad_Click(object sender, EventArgs e)
         {
             OpenFileDialog openFile = new OpenFileDialog();
             if (openFile.ShowDialog() == DialogResult.OK)
             {
                 // Load the image
-                Image<Bgr, Byte> srcImg = new Image<Bgr, Byte>(openFile.FileName);
+                srcImg = new Image<Bgr, Byte>(openFile.FileName);
+                srcImgGray = srcImg.Convert<Gray, byte>();
+                width = srcImg.Width;
+                height = srcImg.Height;
 
-                // Display the image
+                // Display the image. I(x, y, {B,G,R}): img.Data[y, x, {0,1,2}]
                 pictureBoxSrc.Image = srcImg.ToBitmap();
 
                 // Output debug info
-                Debug.WriteLine(String.Format("Name:{0}, X:{1}, Y{2}", openFile.FileName, srcImg.Width, srcImg.Height));
+                Debug.WriteLine(String.Format("Name:{0}, X:{1}, Y{2}", openFile.FileName, width, height));
+                Debug.WriteLine(String.Format("I(499,0): B:{0}, G:{1}, R:{2}",
+                    srcImg.Data[0, 499, 0], srcImg.Data[0, 499, 1], srcImg.Data[0, 499, 2]));
+                Debug.WriteLine(energy(0, 0));
             }
         }
     }
