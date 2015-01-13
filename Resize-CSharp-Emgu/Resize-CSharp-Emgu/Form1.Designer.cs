@@ -31,8 +31,12 @@
             this.panelImg = new System.Windows.Forms.Panel();
             this.pictureBoxSrc = new System.Windows.Forms.PictureBox();
             this.panelBtn = new System.Windows.Forms.Panel();
-            this.buttonLoad = new System.Windows.Forms.Button();
+            this.textBoxHeight = new System.Windows.Forms.TextBox();
+            this.textBoxWidth = new System.Windows.Forms.TextBox();
+            this.labelHeight = new System.Windows.Forms.Label();
+            this.labelWidth = new System.Windows.Forms.Label();
             this.buttonResize = new System.Windows.Forms.Button();
+            this.buttonLoad = new System.Windows.Forms.Button();
             this.panelImg.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxSrc)).BeginInit();
             this.panelBtn.SuspendLayout();
@@ -61,6 +65,10 @@
             // 
             this.panelBtn.BackColor = System.Drawing.Color.LightSteelBlue;
             this.panelBtn.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.panelBtn.Controls.Add(this.textBoxHeight);
+            this.panelBtn.Controls.Add(this.textBoxWidth);
+            this.panelBtn.Controls.Add(this.labelHeight);
+            this.panelBtn.Controls.Add(this.labelWidth);
             this.panelBtn.Controls.Add(this.buttonResize);
             this.panelBtn.Controls.Add(this.buttonLoad);
             this.panelBtn.Location = new System.Drawing.Point(558, 20);
@@ -68,15 +76,37 @@
             this.panelBtn.Size = new System.Drawing.Size(204, 500);
             this.panelBtn.TabIndex = 1;
             // 
-            // buttonLoad
+            // textBoxHeight
             // 
-            this.buttonLoad.Location = new System.Drawing.Point(0, 0);
-            this.buttonLoad.Name = "buttonLoad";
-            this.buttonLoad.Size = new System.Drawing.Size(200, 50);
-            this.buttonLoad.TabIndex = 0;
-            this.buttonLoad.Text = "Load";
-            this.buttonLoad.UseVisualStyleBackColor = true;
-            this.buttonLoad.Click += new System.EventHandler(this.buttonLoad_Click);
+            this.textBoxHeight.Location = new System.Drawing.Point(58, 100);
+            this.textBoxHeight.Name = "textBoxHeight";
+            this.textBoxHeight.Size = new System.Drawing.Size(100, 22);
+            this.textBoxHeight.TabIndex = 5;
+            // 
+            // textBoxWidth
+            // 
+            this.textBoxWidth.Location = new System.Drawing.Point(58, 70);
+            this.textBoxWidth.Name = "textBoxWidth";
+            this.textBoxWidth.Size = new System.Drawing.Size(100, 22);
+            this.textBoxWidth.TabIndex = 4;
+            // 
+            // labelHeight
+            // 
+            this.labelHeight.AutoSize = true;
+            this.labelHeight.Location = new System.Drawing.Point(0, 100);
+            this.labelHeight.Name = "labelHeight";
+            this.labelHeight.Size = new System.Drawing.Size(53, 17);
+            this.labelHeight.TabIndex = 3;
+            this.labelHeight.Text = "Height:";
+            // 
+            // labelWidth
+            // 
+            this.labelWidth.AutoSize = true;
+            this.labelWidth.Location = new System.Drawing.Point(0, 70);
+            this.labelWidth.Name = "labelWidth";
+            this.labelWidth.Size = new System.Drawing.Size(52, 17);
+            this.labelWidth.TabIndex = 2;
+            this.labelWidth.Text = " Width:";
             // 
             // buttonResize
             // 
@@ -87,6 +117,16 @@
             this.buttonResize.Text = "Resize";
             this.buttonResize.UseVisualStyleBackColor = true;
             this.buttonResize.Click += new System.EventHandler(this.buttonResize_Click);
+            // 
+            // buttonLoad
+            // 
+            this.buttonLoad.Location = new System.Drawing.Point(0, 0);
+            this.buttonLoad.Name = "buttonLoad";
+            this.buttonLoad.Size = new System.Drawing.Size(200, 50);
+            this.buttonLoad.TabIndex = 0;
+            this.buttonLoad.Text = "Load";
+            this.buttonLoad.UseVisualStyleBackColor = true;
+            this.buttonLoad.Click += new System.EventHandler(this.buttonLoad_Click);
             // 
             // Form1
             // 
@@ -101,6 +141,7 @@
             this.panelImg.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxSrc)).EndInit();
             this.panelBtn.ResumeLayout(false);
+            this.panelBtn.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -112,6 +153,10 @@
         private System.Windows.Forms.Button buttonLoad;
         private System.Windows.Forms.PictureBox pictureBoxSrc;
         private System.Windows.Forms.Button buttonResize;
+        private System.Windows.Forms.Label labelWidth;
+        private System.Windows.Forms.Label labelHeight;
+        private System.Windows.Forms.TextBox textBoxWidth;
+        private System.Windows.Forms.TextBox textBoxHeight;
     }
 }
 

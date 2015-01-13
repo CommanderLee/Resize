@@ -16,19 +16,27 @@ namespace Resize_CSharp_Emgu
 {
     public partial class Form1 : Form
     {
-        private Image<Bgr, Byte>    srcImg = null;
-        private Image<Gray, Byte>   srcImgGray = null;
-        private int                 width;
-        private int                 height;
+        private int                 id = 0;
 
-        // Energy value, vertical/horizontal seam matrix
-        private int[,]              energy;
-        private int[,]              verSeamMat;
-        private int[,]              horSeamMat;
+        // Image: [id mod 2]
+        private Image<Bgr, Byte>[]  myImg;
+        private Image<Gray, Byte>[] myImgGray;
+
+        // Source/Target width and height
+        private int                 srcWidth, srcHeight;
+        private int                 tarWidth, tarHeight;
+
+        // Energy value, vertical/horizontal seam matrix: [x, y, id mod 2]
+        private int[,,]             energy;
+        private int[,,]             verSeamMat;
+        private int[,,]             horSeamMat;
 
         public Form1()
         {
             InitializeComponent();
+
+            myImg = new Image<Bgr, byte>[2];
+            myImgGray = new Image<Gray, Byte>[2];
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -44,23 +52,24 @@ namespace Resize_CSharp_Emgu
             int ret = 0;
             try
             {
+                int currID = id % 2;
                 // Simple version
                 if (y > 0)
                 {
-                    ret += Math.Abs(srcImg.Data[x, y, 0] - srcImg.Data[x, y - 1, 0]);
+                    ret += Math.Abs(myImgGray[currID].Data[x, y, 0] - myImgGray[currID].Data[x, y - 1, 0]);
                 }
                 else
                 {
-                    ret += Math.Abs(srcImg.Data[x, y, 0]);
+                    ret += Math.Abs(myImgGray[currID].Data[x, y, 0]);
                 }
 
                 if (x > 0)
                 {
-                    ret += Math.Abs(srcImg.Data[x, y, 0] - srcImg.Data[x - 1, y, 0]);
+                    ret += Math.Abs(myImgGray[currID].Data[x, y, 0] - myImgGray[currID].Data[x - 1, y, 0]);
                 }
                 else
                 {
-                    ret += Math.Abs(srcImg.Data[x, y, 0]);
+                    ret += Math.Abs(myImgGray[currID].Data[x, y, 0]);
                 }
             }
             catch (Exception e)
@@ -76,32 +85,39 @@ namespace Resize_CSharp_Emgu
             if (openFile.ShowDialog() == DialogResult.OK)
             {
                 // Load the image
-                srcImg = new Image<Bgr, Byte>(openFile.FileName);
-                srcImgGray = srcImg.Convert<Gray, byte>();
-                width = srcImg.Width;
-                height = srcImg.Height;
+                myImg[0] = new Image<Bgr, Byte>(openFile.FileName);
+                myImg[1] = new Image<Bgr, Byte>(openFile.FileName);
+                srcWidth = myImg[0].Width;
+                srcHeight = myImg[0].Height;
 
                 // Display the image. 
                 // I(x, y, {B,G,R}): img.Data[x, y, {0,1,2}]. x: row No. y: col No.
-                pictureBoxSrc.Image = srcImg.ToBitmap();
+                pictureBoxSrc.Image = myImg[0].ToBitmap();
 
                 // Output debug info
-                Debug.WriteLine(String.Format("Name:{0}, Width:{1}, Height{2}", openFile.FileName, width, height));
+                Debug.WriteLine(String.Format("Name:{0}, Width:{1}, Height{2}", openFile.FileName, srcWidth, srcHeight));
                 Debug.WriteLine(String.Format("I(0, 499): B:{0}, G:{1}, R:{2}",
-                    srcImg.Data[0, 499, 0], srcImg.Data[0, 499, 1], srcImg.Data[0, 499, 2]));
-                Debug.WriteLine(getEnergy(0, 0));
+                    myImg[0].Data[0, 499, 0], myImg[0].Data[0, 499, 1], myImg[0].Data[0, 499, 2]));
             }
         }
 
         private void buttonResize_Click(object sender, EventArgs e)
         {
+            tarWidth = Convert.ToInt32(textBoxWidth.Text);
+            tarHeight = Convert.ToInt32(textBoxHeight.Text);
+
+            int currID = id % 2;
+
+            // Get Gray image
+            myImgGray[currID] = myImg[currID].Convert<Gray, byte>();
+
             // Get energy value
-            energy = new int[height, width];
-            for (int i = 0; i < height; ++i)
+            energy = new int[srcHeight, srcWidth, 2];
+            for (int i = 0; i < srcHeight; ++i)
             {
-                for (int j = 0; j < width; ++j)
+                for (int j = 0; j < srcWidth; ++j)
                 {
-                    energy[i, j] = getEnergy(i, j);
+                    energy[i, j, currID] = getEnergy(i, j);
                     // Debug.WriteLine(String.Format("{0},{1}: {2}", i, j, energy[i, j]));
                 }
             }
