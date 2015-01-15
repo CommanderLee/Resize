@@ -21,7 +21,6 @@ namespace Resize_CSharp_Emgu
         // Image: [id mod 2]
         private Image<Bgr, Byte>    srcImg;
         private Image<Bgr, Byte>[]  myImg;
-        // private Image<Gray, Byte>[] myImgGray;
 
         // Source/Current/Target width and height
         private int                 srcWidth, srcHeight;
@@ -34,12 +33,16 @@ namespace Resize_CSharp_Emgu
 
         private int[]               verSeam, horSeam;
 
+        private int[,]              seamMap;
+        private Stack<int[]>        verSeams, horSeams;
+
         public SeamCarving()
         {
             InitializeComponent();
 
             myImg = new Image<Bgr, byte>[2];
-            // myImgGray = new Image<Gray, Byte>[2];
+            verSeams = new Stack<int[]>();
+            horSeams = new Stack<int[]>();
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -152,17 +155,15 @@ namespace Resize_CSharp_Emgu
                 for (int j = 0; j < col; ++j)
                 {
                     myImg[newID][i, j] = myImg[currID][i, j];
-                    // myImgGray[newID][i, j] = myImgGray[currID][i, j];
                     energy[i, j, newID] = energy[i, j, currID];
                 }
 
-                myImg[currID][i, col] = new Bgr(Color.Red);
+                //myImg[currID][i, col] = new Bgr(Color.Red);
 
                 // Move [col + 1..old width - 1] to left
                 for (int j = col; j < currWidth - 1; ++j)
                 {
                     myImg[newID][i, j] = myImg[currID][i, j + 1];
-                    // myImgGray[newID][i, j] = myImgGray[currID][i, j + 1];
                     energy[i, j, newID] = energy[i, j + 1, currID];
                 }
 
@@ -259,7 +260,7 @@ namespace Resize_CSharp_Emgu
                     energy[i, j, newID] = energy[i, j, currID];
                 }
 
-                myImg[currID][row, j] = new Bgr(Color.Red);
+                // myImg[currID][row, j] = new Bgr(Color.Red);
 
                 // Move [row + 1..old height - 1] to left
                 for (int i = row; i < currHeight - 1; ++i)
@@ -306,6 +307,110 @@ namespace Resize_CSharp_Emgu
             // pictureBoxTar.Image = myImg[currID].ToBitmap();
         }
 
+        // Enlarge the seam
+        private void enlargeVerticalSeam()
+        {
+            int currID = id % 2;
+            // Calculate energy matrix with DP
+            for (int i = 0; i < currHeight; ++i)
+            {
+                for (int j = 0; j < currWidth; ++j)
+                {
+                    if (i > 0)
+                    {
+                        verSeamMat[i, j, currID] = energy[i, j, currID] + verSeamMat[i - 1, j, currID];
+                        if (j > 0)
+                        {
+                            verSeamMat[i, j, currID] = Math.Min(energy[i, j, currID] + verSeamMat[i - 1, j - 1, currID],
+                                verSeamMat[i, j, currID]);
+                        }
+                        if (j < currWidth - 1)
+                        {
+                            verSeamMat[i, j, currID] = Math.Min(energy[i, j, currID] + verSeamMat[i - 1, j + 1, currID],
+                                verSeamMat[i, j, currID]);
+                        }
+                    }
+                    else
+                    {
+                        verSeamMat[i, j, currID] = energy[i, j, currID];
+                    }
+                }
+            }
+
+            ++id;
+            int newID = id % 2;
+
+            // Get the column No. of the seam on the last row
+            int col = 0, minMatrix = verSeamMat[currHeight - 1, 0, currID];
+            for (int j = 1; j < currWidth; ++j)
+            {
+                if (verSeamMat[currHeight - 1, j, currID] < minMatrix)
+                {
+                    // update min
+                    col = j;
+                    minMatrix = verSeamMat[currHeight - 1, j, currID];
+                }
+            }
+            verSeam[currHeight - 1] = col;
+
+            // Get column No. on the other rows and get new image and energy
+            for (int i = currHeight - 1; i >= 0; --i)
+            {
+                // Copy [0..col - 1]
+                for (int j = 0; j < col; ++j)
+                {
+                    myImg[newID][i, j] = myImg[currID][i, j];
+                    energy[i, j, newID] = energy[i, j, currID];
+                }
+
+                //myImg[currID][i, col] = new Bgr(Color.Red);
+
+                // Move [col + 1..old width - 1] to left
+                for (int j = col; j < currWidth - 1; ++j)
+                {
+                    myImg[newID][i, j] = myImg[currID][i, j + 1];
+                    energy[i, j, newID] = energy[i, j + 1, currID];
+                }
+
+                // Get next column No.
+                if (i > 0)
+                {
+                    int newCol = col;
+                    minMatrix = verSeamMat[i - 1, newCol, currID];
+                    if (col > 0 && verSeamMat[i - 1, col - 1, currID] < minMatrix)
+                    {
+                        newCol = col - 1;
+                        minMatrix = verSeamMat[i - 1, col - 1, currID];
+                    }
+                    if (col < currWidth - 1 && verSeamMat[i - 1, col + 1, currID] < minMatrix)
+                    {
+                        newCol = col + 1;
+                    }
+                    verSeam[i - 1] = newCol;
+                    col = newCol;
+                }
+            }
+
+            verSeams.Push(verSeam.ToArray<int>());
+
+            // Calculate other energy at point near the seam
+            // The energy of most points doesnot change
+            for (int i = 0; i < currHeight; ++i)
+            {
+                for (int j = verSeam[i] - 1; j <= verSeam[i]; ++j)
+                {
+                    // Valid point in the new image
+                    if (j >= 0 && j < currWidth - 1)
+                    {
+                        energy[i, j, newID] = getEnergy(i, j);
+                    }
+                }
+            }
+
+            // show the temp img
+            // pictureBoxTar.Image = myImg[currID].ToBitmap();
+        }
+
         private void resize()
         {
             currWidth = srcWidth;
@@ -321,6 +426,34 @@ namespace Resize_CSharp_Emgu
                     Debug.WriteLine(String.Format("Seam No.{0} - Vertical - Done.", id));
                 }
             }
+            else
+            {
+                int newTarWidth = tarWidth - currWidth - currWidth;
+                while (currWidth > newTarWidth)
+                {
+                    enlargeVerticalSeam();
+                    --currWidth;
+
+                    Debug.WriteLine(String.Format("Seam No.{0} - Vertical - Done.", id));
+                }
+
+                foreach (int[] seam in verSeams)
+                {
+                    int currID = id % 2;
+                    ++id;
+                    int newID = id % 2;
+
+                    for (int i = 0; i < currHeight; ++i)
+                    {
+                        int col = seam[i];
+                        for (int j = 0; j < col; ++j)
+                        {
+                            myImg[newID][i, j] = myImg[currID][i, j];
+                        }
+
+                    }
+                }
+            }
 
             if (currHeight > tarHeight)
             {
@@ -333,11 +466,11 @@ namespace Resize_CSharp_Emgu
                 }
             }
 
-            int currID = id % 2;
+            int _currID = id % 2;
             Image<Bgr, Byte> tarImg = new Image<Bgr, Byte>(tarWidth, tarHeight);
             for (int i = 0; i < tarHeight; ++i)
                 for (int j = 0; j < tarWidth; ++j)
-                    tarImg[i, j] = myImg[currID][i, j];
+                    tarImg[i, j] = myImg[_currID][i, j];
             pictureBoxTar.Image = tarImg.ToBitmap();
         }
 
@@ -348,16 +481,12 @@ namespace Resize_CSharp_Emgu
             {
                 // Load the image
                 srcImg = new Image<Bgr, Byte>(openFile.FileName);
-                myImg[0] = srcImg.Copy();
-                myImg[1] = srcImg.Copy();
-                // myImgGray[0] = myImg[0].Convert<Gray, byte>();
-                // myImgGray[1] = myImg[1].Convert<Gray, byte>();
-                srcWidth = myImg[0].Width;
-                srcHeight = myImg[0].Height;
+                srcWidth = srcImg.Width;
+                srcHeight = srcImg.Height;
 
                 // Display the image. 
                 // I(x, y, {B,G,R}): img.Data[x, y, {0,1,2}]. x: row No. y: col No.
-                pictureBoxSrc.Image = myImg[0].ToBitmap();
+                pictureBoxSrc.Image = srcImg.ToBitmap();
                 textBoxHeight.Text = Convert.ToString(srcHeight);
                 textBoxWidth.Text = Convert.ToString(srcWidth);
 
@@ -373,21 +502,33 @@ namespace Resize_CSharp_Emgu
             // Initialize
             id = 0;
             int currID = id % 2;
-            myImg[0] = srcImg.Copy();
-            // myImgGray[0] = srcImg.Convert<Gray, Byte>();
             currHeight = srcHeight;
             currWidth = srcWidth;
+            seamMap = new int[srcHeight, srcWidth];
+            verSeams.Clear();
+            horSeams.Clear();
 
             tarWidth = Convert.ToInt32(textBoxWidth.Text);
             tarHeight = Convert.ToInt32(textBoxHeight.Text);
             Debug.WriteLine(String.Format("Begin: {0}x{1} -> {2}x{3}", srcHeight, srcWidth, tarHeight, tarWidth));
+            int height = Math.Max(srcHeight, tarHeight), width = Math.Max(srcWidth, tarWidth);
+
+            myImg[0] = new Image<Bgr, Byte>(width, height);
+            for (int i = 0; i < srcHeight; ++i)
+            {
+                for (int j = 0; j < srcWidth; ++j)
+                {
+                    myImg[0][i, j] = srcImg[i, j];
+                }
+            }
+            myImg[1] = myImg[0].Copy();
 
             // Get energy value
-            energy = new int[srcHeight, srcWidth, 2];
-            verSeamMat = new int[srcHeight, srcWidth, 2];
-            horSeamMat = new int[srcHeight, srcWidth, 2];
-            verSeam = new int[srcHeight];
-            horSeam = new int[srcWidth];
+            energy = new int[height, width, 2];
+            verSeamMat = new int[height, width, 2];
+            horSeamMat = new int[height, width, 2];
+            verSeam = new int[height];
+            horSeam = new int[width];
             for (int i = 0; i < srcHeight; ++i)
             {
                 for (int j = 0; j < srcWidth; ++j)

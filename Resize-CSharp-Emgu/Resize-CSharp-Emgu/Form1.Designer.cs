@@ -48,12 +48,12 @@
             // 
             // panelImg1
             // 
-            this.panelImg1.AutoSize = true;
+            this.panelImg1.AutoScroll = true;
             this.panelImg1.BackColor = System.Drawing.Color.AliceBlue;
             this.panelImg1.Controls.Add(this.pictureBoxSrc);
             this.panelImg1.Location = new System.Drawing.Point(20, 20);
             this.panelImg1.Name = "panelImg1";
-            this.panelImg1.Size = new System.Drawing.Size(703, 503);
+            this.panelImg1.Size = new System.Drawing.Size(700, 500);
             this.panelImg1.TabIndex = 0;
             // 
             // pictureBoxSrc
@@ -139,11 +139,11 @@
             // 
             // panelImg2
             // 
-            this.panelImg2.AutoSize = true;
+            this.panelImg2.AutoScroll = true;
             this.panelImg2.Controls.Add(this.pictureBoxTar);
             this.panelImg2.Location = new System.Drawing.Point(1000, 20);
             this.panelImg2.Name = "panelImg2";
-            this.panelImg2.Size = new System.Drawing.Size(703, 503);
+            this.panelImg2.Size = new System.Drawing.Size(700, 500);
             this.panelImg2.TabIndex = 2;
             // 
             // pictureBoxTar
@@ -177,7 +177,6 @@
             this.panelImg2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxTar)).EndInit();
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
