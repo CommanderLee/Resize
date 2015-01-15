@@ -411,6 +411,111 @@ namespace Resize_CSharp_Emgu
             // pictureBoxTar.Image = myImg[currID].ToBitmap();
         }
 
+        private void enlargeHorizontalSeam()
+        {
+            int currID = id % 2;
+            // Calculate energy matrix with DP
+            for (int j = 0; j < currWidth; ++j)
+            {
+                for (int i = 0; i < currHeight; ++i)
+                {
+                    if (j > 0)
+                    {
+                        horSeamMat[i, j, currID] = energy[i, j, currID] + horSeamMat[i, j - 1, currID];
+                        if (i > 0)
+                        {
+                            horSeamMat[i, j, currID] = Math.Min(energy[i, j, currID] + horSeamMat[i - 1, j - 1, currID],
+                                horSeamMat[i, j, currID]);
+                        }
+                        if (i < currHeight - 1)
+                        {
+                            horSeamMat[i, j, currID] = Math.Min(energy[i, j, currID] + horSeamMat[i + 1, j - 1, currID],
+                                horSeamMat[i, j, currID]);
+                        }
+                    }
+                    else
+                    {
+                        horSeamMat[i, j, currID] = energy[i, j, currID];
+                    }
+                }
+            }
+
+            ++id;
+            int newID = id % 2;
+
+            // Get the row No. of the seam on the last column
+            int row = 0, minMatrix = horSeamMat[0, currWidth - 1, currID];
+            for (int i = 1; i < currHeight; ++i)
+            {
+                if (horSeamMat[i, currWidth - 1, currID] < minMatrix)
+                {
+                    // update min
+                    row = i;
+                    minMatrix = horSeamMat[i, currWidth - 1, currID];
+                }
+            }
+            horSeam[currWidth - 1] = row;
+
+            // Get row No. on the other columns and get new image and energy
+            for (int j = currWidth - 1; j >= 0; --j)
+            {
+                // Copy [0..row - 1]
+                for (int i = 0; i < row; ++i)
+                {
+                    myImg[newID][i, j] = myImg[currID][i, j];
+                    // myImgGray[newID][i, j] = myImgGray[currID][i, j];
+                    energy[i, j, newID] = energy[i, j, currID];
+                }
+
+                // myImg[currID][row, j] = new Bgr(Color.Red);
+
+                // Move [row + 1..old height - 1] to left
+                for (int i = row; i < currHeight - 1; ++i)
+                {
+                    myImg[newID][i, j] = myImg[currID][i + 1, j];
+                    // myImgGray[newID][i, j] = myImgGray[currID][i + 1, j];
+                    energy[i, j, newID] = energy[i + 1, j, currID];
+                }
+
+                // Get next row No.
+                if (j > 0)
+                {
+                    int newRow = row;
+                    minMatrix = horSeamMat[newRow, j - 1, currID];
+                    if (row > 0 && horSeamMat[row - 1, j - 1, currID] < minMatrix)
+                    {
+                        newRow = row - 1;
+                        minMatrix = horSeamMat[row - 1, j - 1, currID];
+                    }
+                    if (row < currHeight - 1 && horSeamMat[row + 1, j - 1, currID] < minMatrix)
+                    {
+                        newRow = row + 1;
+                    }
+                    horSeam[j - 1] = newRow;
+                    row = newRow;
+                }
+            }
+
+            horSeams.Push(horSeam.ToArray<int>());
+
+            // Calculate other energy at point near the seam
+            // The energy of most points does not change
+            for (int j = 0; j < currWidth; ++j)
+            {
+                for (int i = horSeam[j] - 1; i <= horSeam[j]; ++i)
+                {
+                    // Valid point in the new image
+                    if (i >= 0 && i < currHeight - 1)
+                    {
+                        energy[i, j, newID] = getEnergy(i, j);
+                    }
+                }
+            }
+
+            // show the temp img
+            // pictureBoxTar.Image = myImg[currID].ToBitmap();
+        }
+
         private void resize()
         {
             currWidth = srcWidth;
@@ -427,7 +532,7 @@ namespace Resize_CSharp_Emgu
                     Debug.WriteLine(String.Format("Seam No.{0} - Vertical - Done.", id));
                 }
             }
-            else
+            else if (currWidth < tarWidth)
             {
                 int newTarWidth = currWidth - (tarWidth - currWidth);
                 while (currWidth > newTarWidth)
@@ -439,6 +544,7 @@ namespace Resize_CSharp_Emgu
                 }
 
                 // Recover the seams
+                seamMap = new int[tarHeight, tarWidth];
                 foreach (int[] seam in verSeams)
                 {
                     currID = id % 2;
@@ -462,26 +568,6 @@ namespace Resize_CSharp_Emgu
                         // Set
                         myImg[newID][i, col] = new Bgr(Color.Red);
                         seamMap[i, col] = 1;
-                        //for (int c = 0; c <= 2; ++c)
-                        //{
-                        //    if (col == 0)
-                        //    {
-                        //        myImg[newID].Data[i, col, c] = myImg[newID].Data[i, col + 2, c];
-                        //        myImg[newID].Data[i, col + 1, c] = myImg[newID].Data[i, col + 2, c];
-                        //    }
-                        //    else if (col == currWidth - 1)
-                        //    {
-                        //        myImg[newID].Data[i, col, c] = myImg[newID].Data[i, col - 1, c];
-                        //        myImg[newID].Data[i, col + 1, c] = myImg[newID].Data[i, col - 1, c];
-                        //    }
-                        //    else
-                        //    {
-                        //        myImg[newID].Data[i, col, c] = (Byte)((2 * (int)myImg[newID].Data[i, col - 1, c] + 
-                        //            1 * (int)myImg[newID].Data[i, col + 2, c]) / 3);
-                        //        myImg[newID].Data[i, col + 1, c] = (Byte)((1 * (int)myImg[newID].Data[i, col - 1, c] +
-                        //            2 * (int)myImg[newID].Data[i, col + 2, c]) / 3);
-                        //    }
-                        //}
                     }
                     ++currWidth;
                 }
@@ -508,7 +594,7 @@ namespace Resize_CSharp_Emgu
                             
                             // Get next valid point
                             int nextJ = j + 1;
-                            while (j < currWidth && seamMap[i, nextJ] == 1)
+                            while (nextJ < currWidth && seamMap[i, nextJ] == 1)
                             {
                                 ++nextJ;
                             }
@@ -559,6 +645,7 @@ namespace Resize_CSharp_Emgu
                         }
                     }
                 }
+                currWidth = tarWidth;
             }
 
             if (currHeight > tarHeight)
@@ -570,6 +657,122 @@ namespace Resize_CSharp_Emgu
 
                     Debug.WriteLine(String.Format("Seam No.{0} - Horizontal - Done.", id));
                 }
+            }
+            else if (currHeight < tarHeight)
+            {
+                int newTarHeight = currHeight - (tarHeight - currHeight);
+                while (currHeight > newTarHeight)
+                {
+                    enlargeHorizontalSeam();
+                    --currHeight;
+
+                    Debug.WriteLine(String.Format("Seam No.{0} - Horizontal - Done.", id));
+                }
+
+                // Recover the seams
+                seamMap = new int[tarHeight, tarWidth];
+                foreach (int[] seam in horSeams)
+                {
+                    currID = id % 2;
+                    ++id;
+                    newID = id % 2;
+
+                    for (int j = 0; j < currWidth; ++j)
+                    {
+                        int row = seam[j];
+                        // Copy
+                        for (int i = 0; i < row; ++i)
+                        {
+                            myImg[newID][i, j] = myImg[currID][i, j];
+                        }
+                        for (int i = currHeight - 1; i > row; --i)
+                        {
+                            myImg[newID][i, j] = myImg[currID][i - 1, j];
+                            seamMap[i, j] = seamMap[i - 1, j];
+                        }
+
+                        // Set
+                        myImg[newID][row, j] = new Bgr(Color.Red);
+                        seamMap[row, j] = 1;
+                    }
+                    ++currHeight;
+                }
+
+                // Enlarge
+                currID = id % 2;
+                ++id;
+                newID = id % 2;
+                for (int j = 0; j < currWidth; ++j)
+                {
+                    Console.WriteLine("j: " + j);
+                    int i = 0, newI = 0;
+                    while (i < currHeight)
+                    {
+                        if (seamMap[i, j] == 0)
+                        {
+                            // Normal
+                            myImg[newID][newI, j] = myImg[currID][i, j];
+                            ++i;
+                            ++newI;
+                        }
+                        else if (seamMap[i, j] == 1)
+                        {
+                            // Seam
+
+                            // Get next valid point
+                            int nextI = i + 1;
+                            while (nextI < currHeight && seamMap[nextI, j] == 1)
+                            {
+                                ++nextI;
+                            }
+
+                            if (nextI == currHeight)
+                            {
+                                // The following are all seams: [i, ...]
+                                while (i < currHeight)
+                                {
+                                    myImg[newID][newI, j] = myImg[newID][newI - 1, j];
+                                    myImg[newID][newI + 1, j] = myImg[newID][newI, j];
+                                    ++i;
+                                    newI += 2;
+                                }
+                            }
+                            else
+                            {
+                                // next valid point is nextI. Seam:[i...nextI-1]
+                                if (newI == 0)
+                                {
+                                    // No valid points before
+                                    while (i < nextI)
+                                    {
+                                        myImg[newID][newI, j] = myImg[currID][nextI, j];
+                                        myImg[newID][newI + 1, j] = myImg[currID][nextI, j];
+                                        ++i;
+                                        newI += 2;
+                                    }
+                                }
+                                else
+                                {
+                                    // Enlarge [i...nextI-1] to [newI...]
+                                    // Interpolation, using newI-1 and nextI
+                                    int num = (nextI - i) * 2 + 1;
+                                    for (int k = 1; k < num; ++k)
+                                    {
+                                        for (int c = 0; c <= 2; ++c)
+                                        {
+                                            myImg[newID].Data[newI - 1 + k, j, c] =
+                                                (Byte)(((num - k) * (int)myImg[newID].Data[newI - 1, j, c] +
+                                                k * (int)myImg[currID].Data[nextI, j, c]) / num);
+                                        }
+                                    }
+                                    newI += num - 1;
+                                    i = nextI;
+                                }
+                            }
+                        }
+                    }
+                }
+                currHeight = tarHeight;
             }
 
             currID = id % 2;
@@ -610,7 +813,6 @@ namespace Resize_CSharp_Emgu
             int currID = id % 2;
             currHeight = srcHeight;
             currWidth = srcWidth;
-            seamMap = new int[srcHeight, srcWidth];
             verSeams.Clear();
             horSeams.Clear();
 
@@ -619,6 +821,7 @@ namespace Resize_CSharp_Emgu
             Debug.WriteLine(String.Format("Begin: {0}x{1} -> {2}x{3}", srcHeight, srcWidth, tarHeight, tarWidth));
             int height = Math.Max(srcHeight, tarHeight), width = Math.Max(srcWidth, tarWidth);
 
+            seamMap = new int[height, width];
             myImg[0] = new Image<Bgr, Byte>(width, height);
             for (int i = 0; i < srcHeight; ++i)
             {
