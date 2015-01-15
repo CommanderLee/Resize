@@ -415,6 +415,7 @@ namespace Resize_CSharp_Emgu
         {
             currWidth = srcWidth;
             currHeight = srcHeight;
+            int currID, newID;
 
             if (currWidth > tarWidth)
             {
@@ -428,7 +429,7 @@ namespace Resize_CSharp_Emgu
             }
             else
             {
-                int newTarWidth = tarWidth - currWidth - currWidth;
+                int newTarWidth = currWidth - (tarWidth - currWidth);
                 while (currWidth > newTarWidth)
                 {
                     enlargeVerticalSeam();
@@ -437,20 +438,125 @@ namespace Resize_CSharp_Emgu
                     Debug.WriteLine(String.Format("Seam No.{0} - Vertical - Done.", id));
                 }
 
+                // Recover the seams
                 foreach (int[] seam in verSeams)
                 {
-                    int currID = id % 2;
+                    currID = id % 2;
                     ++id;
-                    int newID = id % 2;
+                    newID = id % 2;
 
                     for (int i = 0; i < currHeight; ++i)
                     {
                         int col = seam[i];
+                        // Copy
                         for (int j = 0; j < col; ++j)
                         {
                             myImg[newID][i, j] = myImg[currID][i, j];
                         }
+                        for (int j = currWidth - 1; j > col; --j)
+                        {
+                            myImg[newID][i, j] = myImg[currID][i, j - 1];
+                            seamMap[i, j] = seamMap[i, j - 1];
+                        }
 
+                        // Set
+                        myImg[newID][i, col] = new Bgr(Color.Red);
+                        seamMap[i, col] = 1;
+                        //for (int c = 0; c <= 2; ++c)
+                        //{
+                        //    if (col == 0)
+                        //    {
+                        //        myImg[newID].Data[i, col, c] = myImg[newID].Data[i, col + 2, c];
+                        //        myImg[newID].Data[i, col + 1, c] = myImg[newID].Data[i, col + 2, c];
+                        //    }
+                        //    else if (col == currWidth - 1)
+                        //    {
+                        //        myImg[newID].Data[i, col, c] = myImg[newID].Data[i, col - 1, c];
+                        //        myImg[newID].Data[i, col + 1, c] = myImg[newID].Data[i, col - 1, c];
+                        //    }
+                        //    else
+                        //    {
+                        //        myImg[newID].Data[i, col, c] = (Byte)((2 * (int)myImg[newID].Data[i, col - 1, c] + 
+                        //            1 * (int)myImg[newID].Data[i, col + 2, c]) / 3);
+                        //        myImg[newID].Data[i, col + 1, c] = (Byte)((1 * (int)myImg[newID].Data[i, col - 1, c] +
+                        //            2 * (int)myImg[newID].Data[i, col + 2, c]) / 3);
+                        //    }
+                        //}
+                    }
+                    ++currWidth;
+                }
+
+                // Enlarge
+                currID = id % 2;
+                ++id;
+                newID = id % 2;
+                for (int i = 0; i < currHeight; ++i)
+                {
+                    int j = 0, newJ = 0;
+                    while (j < currWidth)
+                    {
+                        if (seamMap[i, j] == 0)
+                        {
+                            // Normal
+                            myImg[newID][i, newJ] = myImg[currID][i, j];
+                            ++j;
+                            ++newJ;
+                        }
+                        else if (seamMap[i, j] == 1)
+                        {
+                            // Seam
+                            
+                            // Get next valid point
+                            int nextJ = j + 1;
+                            while (j < currWidth && seamMap[i, nextJ] == 1)
+                            {
+                                ++nextJ;
+                            }
+
+                            if (nextJ == currWidth)
+                            {
+                                // The following are all seams: [j, ...]
+                                while (j < currWidth)
+                                {
+                                    myImg[newID][i, newJ] = myImg[newID][i, newJ - 1];
+                                    myImg[newID][i, newJ + 1] = myImg[newID][i, newJ];
+                                    ++j;
+                                    newJ += 2;
+                                }
+                            }
+                            else
+                            {
+                                // next valid point is nextJ. Seam:[j...nextJ-1]
+                                if (newJ == 0)
+                                {
+                                    // No valid points before
+                                    while (j < nextJ)
+                                    {
+                                        myImg[newID][i, newJ] = myImg[currID][i, nextJ];
+                                        myImg[newID][i, newJ + 1] = myImg[currID][i, nextJ];
+                                        ++j;
+                                        newJ += 2;
+                                    }
+                                }
+                                else
+                                {
+                                    // Enlarge [j...nextJ-1] to [newJ...]
+                                    // Interpolation, using newJ-1 and nextJ
+                                    int num = (nextJ - j) * 2 + 1;
+                                    for (int k = 1; k < num; ++k)
+                                    {
+                                        for (int c = 0; c <= 2; ++c)
+                                        {
+                                            myImg[newID].Data[i, newJ - 1 + k, c] = 
+                                                (Byte)(((num - k) * (int)myImg[newID].Data[i, newJ - 1, c] + 
+                                                k * (int)myImg[currID].Data[i, nextJ, c]) / num);
+                                        }
+                                    }
+                                    newJ += num - 1;
+                                    j = nextJ;
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -466,11 +572,11 @@ namespace Resize_CSharp_Emgu
                 }
             }
 
-            int _currID = id % 2;
+            currID = id % 2;
             Image<Bgr, Byte> tarImg = new Image<Bgr, Byte>(tarWidth, tarHeight);
             for (int i = 0; i < tarHeight; ++i)
                 for (int j = 0; j < tarWidth; ++j)
-                    tarImg[i, j] = myImg[_currID][i, j];
+                    tarImg[i, j] = myImg[currID][i, j];
             pictureBoxTar.Image = tarImg.ToBitmap();
         }
 
