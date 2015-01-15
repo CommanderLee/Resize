@@ -48,11 +48,12 @@
             // 
             // panelImg1
             // 
+            this.panelImg1.AutoSize = true;
             this.panelImg1.BackColor = System.Drawing.Color.AliceBlue;
             this.panelImg1.Controls.Add(this.pictureBoxSrc);
             this.panelImg1.Location = new System.Drawing.Point(20, 20);
             this.panelImg1.Name = "panelImg1";
-            this.panelImg1.Size = new System.Drawing.Size(700, 500);
+            this.panelImg1.Size = new System.Drawing.Size(703, 503);
             this.panelImg1.TabIndex = 0;
             // 
             // pictureBoxSrc
@@ -61,6 +62,7 @@
             this.pictureBoxSrc.Location = new System.Drawing.Point(0, 0);
             this.pictureBoxSrc.Name = "pictureBoxSrc";
             this.pictureBoxSrc.Size = new System.Drawing.Size(700, 500);
+            this.pictureBoxSrc.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
             this.pictureBoxSrc.TabIndex = 0;
             this.pictureBoxSrc.TabStop = false;
             // 
@@ -137,10 +139,11 @@
             // 
             // panelImg2
             // 
+            this.panelImg2.AutoSize = true;
             this.panelImg2.Controls.Add(this.pictureBoxTar);
             this.panelImg2.Location = new System.Drawing.Point(1000, 20);
             this.panelImg2.Name = "panelImg2";
-            this.panelImg2.Size = new System.Drawing.Size(700, 500);
+            this.panelImg2.Size = new System.Drawing.Size(703, 503);
             this.panelImg2.TabIndex = 2;
             // 
             // pictureBoxTar
@@ -150,6 +153,7 @@
             this.pictureBoxTar.Location = new System.Drawing.Point(0, 0);
             this.pictureBoxTar.Name = "pictureBoxTar";
             this.pictureBoxTar.Size = new System.Drawing.Size(700, 500);
+            this.pictureBoxTar.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
             this.pictureBoxTar.TabIndex = 0;
             this.pictureBoxTar.TabStop = false;
             // 
@@ -165,12 +169,15 @@
             this.Text = "SeamCarving - Zhen";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.panelImg1.ResumeLayout(false);
+            this.panelImg1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxSrc)).EndInit();
             this.panelBtn.ResumeLayout(false);
             this.panelBtn.PerformLayout();
             this.panelImg2.ResumeLayout(false);
+            this.panelImg2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxTar)).EndInit();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 

@@ -21,7 +21,7 @@ namespace Resize_CSharp_Emgu
         // Image: [id mod 2]
         private Image<Bgr, Byte>    srcImg;
         private Image<Bgr, Byte>[]  myImg;
-        private Image<Gray, Byte>[] myImgGray;
+        // private Image<Gray, Byte>[] myImgGray;
 
         // Source/Current/Target width and height
         private int                 srcWidth, srcHeight;
@@ -39,7 +39,7 @@ namespace Resize_CSharp_Emgu
             InitializeComponent();
 
             myImg = new Image<Bgr, byte>[2];
-            myImgGray = new Image<Gray, Byte>[2];
+            // myImgGray = new Image<Gray, Byte>[2];
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -52,50 +52,52 @@ namespace Resize_CSharp_Emgu
          */
         private int getEnergy(int x, int y)
         {
-            int ret = 0;
+            int result = 0, diff = 0;
             int currID = id % 2;
             try
             {
-                // Simple version
-                if (x > 0)
+                // Dual gradient energy function: The energy of pixel (x, y) is Δx2(x, y) + Δy2(x, y)
+                // Learn this funcion from http://www.cs.princeton.edu/courses/archive/spring13/cos226/assignments/seamCarving.html
+                for (int c = 0; c <= 2; ++c)
                 {
-                    ret += Math.Abs(myImgGray[currID].Data[x, y, 0] - myImgGray[currID].Data[x - 1, y, 0]);
-                }
-                else
-                {
-                    ret += Math.Abs(myImgGray[currID].Data[x, y, 0]);
-                }
-                if (x < currHeight - 1)
-                {
-                    ret += Math.Abs(myImgGray[currID].Data[x + 1, y, 0] - myImgGray[currID].Data[x, y, 0]);
-                }
-                else
-                {
-                    ret += Math.Abs(myImgGray[currID].Data[x, y, 0]);
-                }
+                    if (x == 0)
+                    {
+                        diff = myImg[currID].Data[x + 1, y, c] - myImg[currID].Data[currHeight - 1, y, c];
+                        result += diff * diff;
+                    }
+                    else if (x == currHeight - 1)
+                    {
+                        diff = myImg[currID].Data[0, y, c] - myImg[currID].Data[x - 1, y, c];
+                        result += diff * diff;
+                    }
+                    else
+                    {
+                        diff = myImg[currID].Data[x + 1, y, c] - myImg[currID].Data[x - 1, y, c];
+                        result += diff * diff;
+                    }
 
-                if (y > 0)
-                {
-                    ret += Math.Abs(myImgGray[currID].Data[x, y, 0] - myImgGray[currID].Data[x, y - 1, 0]);
-                }
-                else
-                {
-                    ret += Math.Abs(myImgGray[currID].Data[x, y, 0]);
-                }
-                if (y < currWidth - 1)
-                {
-                    ret += Math.Abs(myImgGray[currID].Data[x, y + 1, 0] - myImgGray[currID].Data[x, y, 0]);
-                }
-                else
-                {
-                    ret += Math.Abs(myImgGray[currID].Data[x, y, 0]);
+                    if (y == 0)
+                    {
+                        diff = myImg[currID].Data[x, y + 1, c] - myImg[currID].Data[x, currWidth - 1, c];
+                        result += diff * diff;
+                    }
+                    else if (y == currWidth - 1)
+                    {
+                        diff = myImg[currID].Data[x, 0, c] - myImg[currID].Data[x, y - 1, c];
+                        result += diff * diff;
+                    }
+                    else
+                    {
+                        diff = myImg[currID].Data[x, y + 1, c] - myImg[currID].Data[x, y - 1, c];
+                        result += diff * diff;
+                    }
                 }
             }
             catch (Exception e)
             {
                 Debug.WriteLine(e.StackTrace);
             }
-            return ret;
+            return result;
         }
 
         private void carveVerticalSeam()
@@ -150,7 +152,7 @@ namespace Resize_CSharp_Emgu
                 for (int j = 0; j < col; ++j)
                 {
                     myImg[newID][i, j] = myImg[currID][i, j];
-                    myImgGray[newID][i, j] = myImgGray[currID][i, j];
+                    // myImgGray[newID][i, j] = myImgGray[currID][i, j];
                     energy[i, j, newID] = energy[i, j, currID];
                 }
 
@@ -160,7 +162,7 @@ namespace Resize_CSharp_Emgu
                 for (int j = col; j < currWidth - 1; ++j)
                 {
                     myImg[newID][i, j] = myImg[currID][i, j + 1];
-                    myImgGray[newID][i, j] = myImgGray[currID][i, j + 1];
+                    // myImgGray[newID][i, j] = myImgGray[currID][i, j + 1];
                     energy[i, j, newID] = energy[i, j + 1, currID];
                 }
 
@@ -253,7 +255,7 @@ namespace Resize_CSharp_Emgu
                 for (int i = 0; i < row; ++i)
                 {
                     myImg[newID][i, j] = myImg[currID][i, j];
-                    myImgGray[newID][i, j] = myImgGray[currID][i, j];
+                    // myImgGray[newID][i, j] = myImgGray[currID][i, j];
                     energy[i, j, newID] = energy[i, j, currID];
                 }
 
@@ -263,7 +265,7 @@ namespace Resize_CSharp_Emgu
                 for (int i = row; i < currHeight - 1; ++i)
                 {
                     myImg[newID][i, j] = myImg[currID][i + 1, j];
-                    myImgGray[newID][i, j] = myImgGray[currID][i + 1, j];
+                    // myImgGray[newID][i, j] = myImgGray[currID][i + 1, j];
                     energy[i, j, newID] = energy[i + 1, j, currID];
                 }
 
@@ -348,8 +350,8 @@ namespace Resize_CSharp_Emgu
                 srcImg = new Image<Bgr, Byte>(openFile.FileName);
                 myImg[0] = srcImg.Copy();
                 myImg[1] = srcImg.Copy();
-                myImgGray[0] = myImg[0].Convert<Gray, byte>();
-                myImgGray[1] = myImg[1].Convert<Gray, byte>();
+                // myImgGray[0] = myImg[0].Convert<Gray, byte>();
+                // myImgGray[1] = myImg[1].Convert<Gray, byte>();
                 srcWidth = myImg[0].Width;
                 srcHeight = myImg[0].Height;
 
@@ -372,7 +374,7 @@ namespace Resize_CSharp_Emgu
             id = 0;
             int currID = id % 2;
             myImg[0] = srcImg.Copy();
-            myImgGray[0] = srcImg.Convert<Gray, Byte>();
+            // myImgGray[0] = srcImg.Convert<Gray, Byte>();
             currHeight = srcHeight;
             currWidth = srcWidth;
 
