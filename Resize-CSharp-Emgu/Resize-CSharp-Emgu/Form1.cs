@@ -186,6 +186,8 @@ namespace Resize_CSharp_Emgu
                 }
             }
 
+            verSeams.Push(verSeam.ToArray<int>());
+
             // Calculate other energy at point near the seam
             // The energy of most points doesnot change
             for (int i = 0; i < currHeight; ++i)
@@ -289,6 +291,8 @@ namespace Resize_CSharp_Emgu
                 }
             }
 
+            horSeams.Push(horSeam.ToArray<int>());
+
             // Calculate other energy at point near the seam
             // The energy of most points does not change
             for (int j = 0; j < currWidth; ++j)
@@ -307,6 +311,7 @@ namespace Resize_CSharp_Emgu
             // pictureBoxTar.Image = myImg[currID].ToBitmap();
         }
 
+        /*
         // Enlarge the seam
         private void enlargeVerticalSeam()
         {
@@ -515,13 +520,14 @@ namespace Resize_CSharp_Emgu
             // show the temp img
             // pictureBoxTar.Image = myImg[currID].ToBitmap();
         }
-
+        */
         private void resize()
         {
             currWidth = srcWidth;
             currHeight = srcHeight;
             int currID, newID;
 
+            // Cut vertical seams
             if (currWidth > tarWidth)
             {
                 while (currWidth > tarWidth)
@@ -532,12 +538,14 @@ namespace Resize_CSharp_Emgu
                     Debug.WriteLine(String.Format("Seam No.{0} - Vertical - Done.", id));
                 }
             }
+            // Enlarge vertical seams
             else if (currWidth < tarWidth)
             {
                 int newTarWidth = currWidth - (tarWidth - currWidth);
                 while (currWidth > newTarWidth)
                 {
-                    enlargeVerticalSeam();
+                    // enlargeVerticalSeam();
+                    carveVerticalSeam();
                     --currWidth;
 
                     Debug.WriteLine(String.Format("Seam No.{0} - Vertical - Done.", id));
@@ -648,6 +656,7 @@ namespace Resize_CSharp_Emgu
                 currWidth = tarWidth;
             }
 
+            // Cut horizontal seams
             if (currHeight > tarHeight)
             {
                 while (currHeight > tarHeight)
@@ -658,12 +667,14 @@ namespace Resize_CSharp_Emgu
                     Debug.WriteLine(String.Format("Seam No.{0} - Horizontal - Done.", id));
                 }
             }
+            // Enlarge horizontal seams
             else if (currHeight < tarHeight)
             {
                 int newTarHeight = currHeight - (tarHeight - currHeight);
                 while (currHeight > newTarHeight)
                 {
-                    enlargeHorizontalSeam();
+                    carveHorizontalSeam();
+                    // enlargeHorizontalSeam();
                     --currHeight;
 
                     Debug.WriteLine(String.Format("Seam No.{0} - Horizontal - Done.", id));
